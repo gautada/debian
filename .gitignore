@@ -1,0 +1,30 @@
+# This template file is stored at
+# [GitHub Gist](https://gist.github.com/gautada/3a0a4a76d3c7e4539e71fc02c7f599ad)
+
+# XCode - Project files 
+*.xcodeproj/
+
+# Nova - Editor files
+*.nova/
+
+# Desktop Services Store - Custom view preferences
+.DS_Store
+
+# All .git files are ignored this is mainly for .dockerignore.
+**.git/
+
+# **Volume Folders** are used in development to set runtime data, usuaully 
+# this is private data and should almost **NEVER** be loaded into version
+# control
+**-volume/
+
+# **Manifest Folder** is the k8s yaml files that deploy the container, usually
+# this folder is sourced from a private repository and should not be public.
+manifest/
+
+# `.dockerignore` file allows you to specify a list of files or directories 
+# that Docker is to ignore during the build process.
+.dockerignore
+.commit
+
+.env

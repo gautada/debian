@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+echo "Starting 'debian' as headless blocking server"
+_cmd="tail -f /dev/null"
+echo "COMMAND: ${_cmd}"
+su debian -c "${_cmd}"
