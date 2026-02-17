@@ -7,5 +7,3 @@ that make your computer run.
 This container is the base image that uses Debian Linux as the initial
 image for other containers as such it's primary purpose is to provide
 functionality services for other downstream containers.
-
-## FF-1
