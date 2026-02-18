@@ -79,20 +79,12 @@ RUN /bin/mkdir -p /mnt/volumes/configuration \
 # │ BACKUP            │
 # ╰―――――――――――――――――――╯
 COPY backup.sh /usr/bin/container-backup
-# RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
-# COPY backup.sh /etc/container/backup
 
 # ╭――――――――――――――――――――╮
 # │ ENTRYPOINT         │
 # ╰――――――――――――――――――――╯
-# COPY container-entrypoint.sh /usr/bin/container-entrypoint
-# COPY entrypoint.sh /etc/container/entrypoint
-
-# ╭――――――――――――――――――――╮
-# │ INIT               │
-# ╰――――――――――――――――――――╯
 RUN mkdir -p /etc/services.d
-# COPY container-init /etc/services.d/container/run
+# COPY crond.sh /etc/services.d/crond/run
 
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
@@ -156,8 +148,6 @@ RUN /usr/sbin/groupadd --gid $UID $USER \
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
 # ╰――――――――――――――――――――╯
-# FROM scratch
-# COPY --from=container / /
 ENTRYPOINT [ "/usr/bin/s6-svscan" , "/etc/services.d" ]
 VOLUME /mnt/volumes/backup
 VOLUME /mnt/volumes/configuration
