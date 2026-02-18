@@ -32,7 +32,7 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 # s6 - Control container processes
 # sudo - Priviledged permissions
 # tzdata - Timezone data
-# [optional] vi - Standard editor
+# vim.tiny - Standard editor
 # zsh - Standardized shell
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
@@ -49,6 +49,7 @@ RUN apt-get update \
             s6 \
             sudo \
             tzdata \
+            vim.tiny \
             zsh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
@@ -122,6 +123,16 @@ RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
+
+# ╭――――――――――――――――――――╮
+# │ ZSH                │
+# ╰――――――――――――――――――――╯
+# Configure zsh with system-wide and user skeleton configurations.
+# The /etc/zsh/zshrc provides system-wide defaults.
+# The /etc/skel/.zshrc is copied to user home on creation via useradd --create-home.
+RUN /bin/mkdir -p /etc/zsh
+COPY zshrc_etc.sh /etc/zsh/zshrc
+COPY zshrc_skel.sh /etc/skel/.zshrc
 
 # ╭――――――――――――――――――――╮
 # │ USER               │
