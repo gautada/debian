@@ -10,4 +10,5 @@
 
 
 # Enable only for debugging
-# %privileged ALL = (ALL) NOPASSWD: /usr/bin/apt-get
+privileged ALL = (ALL) NOPASSWD: /usr/bin/apt-get install curl
+privileged ALL = (ALL) NOPASSWD: /usr/bin/apt-get install git

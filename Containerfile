@@ -10,37 +10,77 @@ LABEL org.opencontainers.image.description="A Debian base container."
 LABEL org.opencontainers.image.url="https://hub.docker.com/r/gautada/debian"
 LABEL org.opencontainers.image.source="https://github.com/gautada/debian"
 LABEL org.opencontainers.image.version="${CONTAINER_VERSION}"
-LABEL org.opencontainers.image.license="Upstream"
+LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 
-# ╭――――――――――――――――――――╮
-# │ VOLUMES            │
-# ╰――――――――――――――――――――╯
-RUN /bin/mkdir -p /mnt/volumes/configmaps /mnt/volumes/data \ 
-    /mnt/volumes/backup /mnt/volumes/secrets  
-                  
 # ╭――――――――――――――――――――╮
 # │ PACKAGES           │
 # ╰――――――――――――――――――――╯
+# This package section installs the base packges to make the the container 
+# have the base capabilities across all containers.  This section should
+# install and then clean the package management system.
+#
+# bind9-dnsutils - To debug dns issues
+# ca-sertificate - Needed to support all manor of SSL stuff
+# curl - To fetch remote files and test http(s) endpoint
+# cron - Scheduler
+# iputils-ping - Ping utlity
+# nmap - Network debug
+# ncat - More network debug
+# procps - Utilities for system information
+# git - Fetch project files etc
+# jq - Parsing JSON
+# s6 - Control container processes
+# sudo - Priviledged permissions
+# tzdata - Timezone data
+# [optional] vi - Standard editor
+# zsh - Standardized shell
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    bind9-dnsutils ca-certificates curl iputils-ping \
-    nmap ncat git jq nano s6 sudo tzdata zsh procps cron \
+ && apt-get install --yes --no-install-recommends \
+            # bind9-dnsutils \
+            ca-certificates \
+            curl \
+            cron \
+            # iputils-ping \
+            # nmap \
+            # ncat \
+            procps \
+            # git \
+            # jq \
+            s6 \
+            sudo \
+            tzdata \
+            zsh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 # ╭―――――――――――――――――――╮
-# │ CONFIG (ROOT)     │
+# │ TIMEZONE          │
 # ╰―――――――――――――――――――╯
+# Set the timezone to east coast us so logs and interaction do not need to be
+# time shifted.
 RUN /bin/mkdir -p /etc/container \
  && echo "America/New_York" > /etc/timezone \
  && /bin/ln -fsv "/usr/share/zoneinfo/$(cat /etc/timezone)" /etc/localtime
+
+# ╭――――――――――――――――――――╮
+# │ VOLUMES            │
+# ╰――――――――――――――――――――╯
+# The volumes section creates the mount points for the most common volume
+# mounts.  Configuration is for mounting configmaps, Data is for any runtime
+# data that needed to persist across container restarts.  Backup is for local
+# backup functions to have a local cahce.  Secrets provides a mount point for
+# secret files to be accessible.
+RUN /bin/mkdir -p /mnt/volumes/configuration \
+                  /mnt/volumes/data \ 
+                  /mnt/volumes/backup \
+                  /mnt/volumes/secrets
  
 # ╭―――――――――――――――――――╮
 # │ BACKUP            │
 # ╰―――――――――――――――――――╯
-# COPY container-backup /usr/bin/container-backup
-RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
-COPY backup.sh /etc/container/backup
+COPY backup.sh /usr/bin/container-backup
+# RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
+# COPY backup.sh /etc/container/backup
 
 # ╭――――――――――――――――――――╮
 # │ ENTRYPOINT         │
@@ -57,61 +97,71 @@ RUN mkdir -p /etc/services.d
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
 # ╰――――――――――――――――――――╯
-COPY privileges /etc/container/privileges
-RUN /bin/ln -fsv /etc/container/privileges /etc/sudoers.d/privileges \
- && /usr/sbin/groupadd --gid 99 privileged
+# Privileges provides a mechanism for least privilege.  This capability takes
+# a priviliges file into a drop-in folder.  A privileges files is in a sudoers
+# file format.  This defines what explicit commands can be run by the
+# privileged user group.  
+COPY privileges /etc/sudoers.d/debian
+RUN /usr/sbin/groupadd --gid 99 privileged
 
 # ╭――――――――――――――――――――╮
 # │ VERSION            │
 # ╰――――――――――――――――――――╯
-COPY container-version.sh /usr/bin/container-version
+# The Version capability provides an easy way for getting the version of the
+# software within the container.  This is usuallly used in the CICD process to
+# confirm the intended version is the version that was built.  The version file
+# is just a script that returns ONLY the version of the software running.
+COPY version.sh /usr/bin/container-version
 
 # ╭――――――――――――――――――――╮
 # │ HEALTH             │
 # ╰――――――――――――――――――――╯
-# COPY container-health /usr/bin/container-health
-# COPY health /etc/container/health
+# The health mechanism uses the the health.d drop-in to hold scripts that test
+# the container's health.  This mechanism support individual container
+# controllers to support liveness, readiness, and startup. This mechanism also
+# supports a test feature that is used in the CICD process to make sure the
+# container is working.  This means that the container should be able to run
+# independently of the environment and configuration it is intended to run
+# within. For downstream containers just define a health script and put in the
+# /etc/container/health.d/ drop-in folder.
+COPY health.sh /usr/bin/container-health
 RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-liveness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
-# COPY cron.health /etc/container/health.d/cron.health
-# COPY os.test /etc/container/health.d/os.test
 
 # ╭――――――――――――――――――――╮
 # │ USER               │
 # ╰――――――――――――――――――――╯
+# The user configuration defines the main container user account.  Downstream
+# containers will modify the user to be a name that is reasonable for the
+# image/container's purpose.  This user will be given privileges using the
+# privileged group and the default shell will be setup.  As well as ownership
+# of volume mount folders.
 ARG USER=debian
 ARG UID=1001
 ARG GID=1001
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# ENTRYPOINT ["/usr/bin/container-entrypoint"]
+# SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN /usr/sbin/groupadd --gid $UID $USER \
  && /usr/sbin/useradd --create-home --gid $GID --shell /bin/zsh \
- --uid $UID $USER \
+                      --uid $UID $USER \
  && /usr/sbin/usermod -aG privileged $USER \
-#  && /usr/sbin/chpasswd << "$USER:$USER" \
  && echo "$USER:$USER" | /usr/sbin/chpasswd \
- && /bin/chown -R $USER:$USER /mnt/volumes/data \
  && /bin/chown -R $USER:$USER /mnt/volumes/backup \
- && /bin/chown -R $USER:$USER /mnt/volumes/configmaps \
+ && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
+ && /bin/chown -R $USER:$USER /mnt/volumes/data \
  && /bin/chown -R $USER:$USER /mnt/volumes/secrets
 
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
 # ╰――――――――――――――――――――╯
-FROM scratch
-COPY --from=container / /
-# ENTRYPOINT ["/usr/bin/container-entrypoint"]
-# ENTRYPOINT ["zsh"]
+# FROM scratch
+# COPY --from=container / /
 ENTRYPOINT [ "/usr/bin/s6-svscan" , "/etc/services.d" ]
 VOLUME /mnt/volumes/backup
-VOLUME /mnt/volumes/configmaps
+VOLUME /mnt/volumes/configuration
 VOLUME /mnt/volumes/data
 VOLUME /mnt/volumes/secrets
-# VOLUME /mnt/volumes/secrets/namespace
-# VOLUME /mnt/volumes/secrets/container
-# EXPOSE 8080/tcp
-# USER root
+EXPOSE 8080/tcp
 WORKDIR /
