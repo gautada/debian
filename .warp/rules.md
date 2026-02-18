@@ -4,7 +4,8 @@
 
 When creating or editing markdown files (`.md`) in this project:
 
-1. **Read and follow** the markdownlint configuration at `.markdownlint.yaml` in the project root
+1. **Read and follow** the markdownlint configuration at `.markdownlint.yaml`
+   in the project root
 2. **Apply all rules** defined in that configuration file
 3. **All markdown output must pass** `pre-commit run markdownlint` without errors
 
