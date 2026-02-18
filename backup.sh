@@ -1,12 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 #
-# backup: This script defines the default backup mechanism function and should be overloaded by downstream controls
+# This is a simple place holder that just prints output to the log to prove
+# that the script is being called on a regular basis. Downstream containers
+# should overload this script with it's own backup script by over-writting
+# /usr/bin/container-backup
 
-container_backup() {
- echo "[ INFO] Current directory($(/bin/pwd))"
- echo "[ WARN] Default container backup function not customized for container"
- date "+%s" > data
- # removed because this could produce too much data
- # /bin/cp -r /mnt/volumes/container/* ./
- return $?
-}
+echo "BACKUP: default script that does nothing"
