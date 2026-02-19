@@ -193,23 +193,31 @@ function precmd() {
   local st=$?
   _crt_rprompt
 
-  # Build status indicator based on previous command's exit code
-  # Using '>' as fallback since '❯' may not render in all fonts
-  local sym
-  if (( st == 0 )); then
-    sym="${CRT_OK}>${CRT_RST}"
-  else
-    sym="${CRT_ERR}x${CRT_RST}"
-  fi
-
   # Select icon based on container detection
-  # To always show container icon, comment out these two lines
   local icon="${ICON_CONTAINER}"
   [[ -z "$IN_CONTAINER" ]] && icon=">"
 
-  # Assemble two-line prompt
-  # %~ = current directory with home abbreviated as ~
-  # Note: Space after ${sym} provides padding before user input
-  PROMPT="${CRT_BG}${CRT_FG} ${icon} %~ ${CRT_RST}"$'\n'"${sym} "
+  # Build the two-line prompt
+  # Line 1: Amber background with path
+  # Line 2: Status indicator (green > on success, red x N on failure)
+  #
+  # The prompt is constructed with proper zsh escaping:
+  # - %K{color} sets background, %F{color} sets foreground
+  # - %f resets foreground, %k resets background
+  # - %~ shows current directory with ~ abbreviation
+  local line1="%K{#FFB000}%F{#000000} ${icon} %~ %f%k"
+  local line2
+  # Adds the additional space between prompt and input
+  if (( st == 0 )); then
+    # line2="%F{#7CFF6B}>%f "
+    line2="%F{#7CFF6B}>%f   "
+  else
+    # line2="%F{#FF4D4D}x ${st}%f "
+    line2="%F{#FF4D4D}x%f   "
+  fi
+
+  PROMPT="${line1}"
+  PROMPT+=$'\n'
+  PROMPT+="${line2}"
 }
 
