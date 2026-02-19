@@ -120,7 +120,7 @@ RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
-COPY version-check.sh /etc/container/health.d/version-check
+COPY osversion-check.sh /etc/container/health.d/osversion-check
 
 # ╭――――――――――――――――――――╮
 # │ ZSH                │
