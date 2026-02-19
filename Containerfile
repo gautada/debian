@@ -19,16 +19,10 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 # have the base capabilities across all containers.  This section should
 # install and then clean the package management system.
 #
-# bind9-dnsutils - To debug dns issues
 # ca-sertificate - Needed to support all manor of SSL stuff
 # curl - To fetch remote files and test http(s) endpoint
 # cron - Scheduler
-# iputils-ping - Ping utlity
-# nmap - Network debug
-# ncat - More network debug
 # procps - Utilities for system information
-# git - Fetch project files etc
-# jq - Parsing JSON
 # s6 - Control container processes
 # sudo - Priviledged permissions
 # tzdata - Timezone data
@@ -36,16 +30,10 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 # zsh - Standardized shell
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-            # bind9-dnsutils \
             ca-certificates \
             curl \
             cron \
-            # iputils-ping \
-            # nmap \
-            # ncat \
             procps \
-            # git \
-            # jq \
             s6 \
             sudo \
             tzdata \
@@ -85,7 +73,16 @@ COPY backup.sh /usr/bin/container-backup
 # │ ENTRYPOINT         │
 # ╰――――――――――――――――――――╯
 RUN mkdir -p /etc/services.d
-# COPY crond.sh /etc/services.d/crond/run
+
+
+# ╭――――――――――――――――――――╮
+# │ CROND              │
+# ╰――――――――――――――――――――╯
+# This container implements and runs crond.  This is used for scheduled tasks
+# within the container.
+COPY crond.sh /etc/services.d/crond/run
+RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
+
 
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
@@ -123,6 +120,7 @@ RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
+COPY version-check.sh /etc/container/health.d/version-check
 
 # ╭――――――――――――――――――――╮
 # │ ZSH                │
@@ -146,11 +144,13 @@ ARG USER=debian
 ARG UID=1001
 ARG GID=1001
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Note: Password is disabled (locked) for container security. Access is controlled
+# externally via podman/docker exec. Sudo uses NOPASSWD rules in /etc/sudoers.d/debian.
 RUN /usr/sbin/groupadd --gid $UID $USER \
  && /usr/sbin/useradd --create-home --gid $GID --shell /bin/zsh \
                       --uid $UID $USER \
  && /usr/sbin/usermod -aG privileged $USER \
- && echo "$USER:$USER" | /usr/sbin/chpasswd \
+ && /usr/bin/passwd -d $USER \
  && /bin/chown -R $USER:$USER /mnt/volumes/backup \
  && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
  && /bin/chown -R $USER:$USER /mnt/volumes/data \
