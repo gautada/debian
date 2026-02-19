@@ -1,2 +1,2 @@
 IMAGE_NAME=debian
-IMAGE_VERSION=bookworm-slim
+IMAGE_VERSION=13.3

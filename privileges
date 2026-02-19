@@ -1,14 +1,31 @@
-# Sudo configuration file. This can be overridden with downstream containers.
+# Sudo configuration file. This can be appended with downstream containers.
 #
 # This provides elevated access as needed for the user of the container.
 #
-%privileged ALL = (ALL) NOPASSWD: /usr/sbin/cron
+# %privileged ALL = (ALL) NOPASSWD: /usr/sbin/cron
 %privileged ALL = (ALL) NOPASSWD: /usr/sbin/update-ca-certificates
 
 # For testing purposes
-%privileged ALL = (ALL) NOPASSWD: /etc/cron.hourly/container-backup
+# %privileged ALL = (ALL) NOPASSWD: /etc/cron.hourly/container-backup
 
 
-# Enable only for debugging
-privileged ALL = (ALL) NOPASSWD: /usr/bin/apt-get install curl
-privileged ALL = (ALL) NOPASSWD: /usr/bin/apt-get install git
+# apt update provides the ability to update packages
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt update
+
+# bind9-dnsutils - To debug dns issues
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes bind9-dnsutils
+
+# iputils-ping - Ping utlity
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes iputils-ping
+
+# nmap - Network debug
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes nmap
+
+# ncat - More network debug
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes ncat
+
+# git - Fetch project files etc
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes git
+
+# jq - Parsing JSON
+%privileged ALL = (ALL) NOPASSWD: /usr/bin/apt install --yes jq

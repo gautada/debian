@@ -22,16 +22,24 @@ fi
 
 # Parse the function from the executed script
 FUNC="$(basename "$0" | awk -F '-' '{print $2}')"
-
+echo "Running ${FUNC} check"
 # Load the health scriptS for _container_health function
+# ANSI color codes
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 FAILED=0
 for script in "$HEALTHD"/*; do
   if [ -x "$script" ]; then
     "$script" "$FUNC"
     RET=$?
+    SCRIPT_NAME=$(basename "$script")
     if [ $RET -ne 0 ]; then
-      echo "Health check failed: $script (exit code $RET)"
+      printf "%s [${RED}FAIL${NC}]\n" "$SCRIPT_NAME"
       FAILED=1
+    else
+      printf "%s [${GREEN} OK ${NC}]\n" "$SCRIPT_NAME"
     fi
   fi
 done
