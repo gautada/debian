@@ -6,7 +6,7 @@
 # Returns 0 if versions match, non-zero otherwise.
 
 # Get current Debian version directly from /etc/debian_version
-CURRENT_VERSION=$(cat /etc/debian_version | tr -d '[:space:]')
+CURRENT_VERSION=$(tr -d '[:space:]' < /etc/debian_version)
 if [ -z "$CURRENT_VERSION" ]; then
   echo "Failed to read Debian version from /etc/debian_version"
   exit 1
