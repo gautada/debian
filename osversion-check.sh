@@ -1,14 +1,14 @@
 #!/bin/sh
 #
 # This script checks if the container version matches the latest Debian release.
-# It runs /usr/bin/container-version to get the current version and compares it
+# It reads /etc/debian_version to get the current version and compares it
 # against the latest Debian stable release version fetched via curl.
 # Returns 0 if versions match, non-zero otherwise.
 
-# Get current container version
-CURRENT_VERSION=$(/usr/bin/container-version)
+# Get current Debian version directly from /etc/debian_version
+CURRENT_VERSION=$(cat /etc/debian_version | tr -d '[:space:]')
 if [ -z "$CURRENT_VERSION" ]; then
-  echo "Failed to get current container version"
+  echo "Failed to read Debian version from /etc/debian_version"
   exit 1
 fi
 
