@@ -133,6 +133,15 @@ COPY zshrc_etc.sh /etc/zsh/zshrc
 COPY zshrc_skel.sh /etc/skel/.zshrc
 
 # ╭――――――――――――――――――――╮
+# │ VIM                │
+# ╰――――――――――――――――――――╯
+# Provide a default vimrc configuration for vim.tiny.
+# Copied to /etc/skel/.vimrc so all users created with --create-home
+# inherit it automatically. Also explicitly placed at /home/debian/.vimrc
+# to satisfy the issue requirement for the default container user.
+COPY vimrc /etc/skel/.vimrc
+
+# ╭――――――――――――――――――――╮
 # │ USER               │
 # ╰――――――――――――――――――――╯
 # The user configuration defines the main container user account.  Downstream
