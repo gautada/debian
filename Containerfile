@@ -52,6 +52,14 @@ RUN /bin/mkdir -p /etc/container \
  && /bin/ln -fsv "/usr/share/zoneinfo/$(cat /etc/timezone)" /etc/localtime
 
 # ╭――――――――――――――――――――╮
+# │ LOCALE             │
+# ╰――――――――――――――――――――╯
+# Set locale to UTF-8 to avoid terminal falling back to ASCII-only mode.
+# C.UTF-8 is a built-in glibc locale; no additional packages are required.
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# ╭――――――――――――――――――――╮
 # │ VOLUMES            │
 # ╰――――――――――――――――――――╯
 # The volumes section creates the mount points for the most common volume
