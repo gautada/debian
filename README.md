@@ -24,7 +24,7 @@ This container serves as the foundation for other containers, providing:
 
 The container sets UTF-8 locale to prevent terminal and application encoding issues:
 
-```
+```text
 LANG=C.UTF-8
 LC_ALL=C.UTF-8
 ```
@@ -61,7 +61,7 @@ The container implements a least privilege security model using sudoers:
 
 A drop-in health check system supports Kubernetes-style probes:
 
-```
+```text
 /usr/bin/container-health     # Main health script
 /usr/bin/container-liveness   # Symlink for liveness probes
 /usr/bin/container-readiness  # Symlink for readiness probes
@@ -275,7 +275,7 @@ RUN echo "UTC" > /etc/timezone \
 
 ## Project Structure
 
-```
+```text
 .
 ├── .args                    # Build arguments
 ├── .gitignore               # Git ignore rules
