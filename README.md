@@ -20,6 +20,17 @@ This container serves as the foundation for other containers, providing:
 
 ## Features
 
+### Locale
+
+The container sets UTF-8 locale to prevent terminal and application encoding issues:
+
+```text
+LANG=C.UTF-8
+LC_ALL=C.UTF-8
+```
+
+`C.UTF-8` is a built-in glibc locale — no additional packages required.
+
 ### Volumes
 
 Four standard volume mount points are created for consistent data management:
@@ -50,13 +61,18 @@ The container implements a least privilege security model using sudoers:
 
 A drop-in health check system supports Kubernetes-style probes:
 
-```
+```text
 /usr/bin/container-health     # Main health script
 /usr/bin/container-liveness   # Symlink for liveness probes
 /usr/bin/container-readiness  # Symlink for readiness probes
 /usr/bin/container-startup    # Symlink for startup probes
 /usr/bin/container-test       # Symlink for CI/CD testing
 ```
+
+**Built-in health checks:**
+
+- `osversion-check` — verifies the OS version is as expected; installed at
+  `/etc/container/health.d/osversion-check`
 
 **Adding health checks (downstream):**
 
@@ -82,7 +98,7 @@ version.
 
 ```bash
 container-version
-# Output: 12.8  (Debian version by default)
+# Output: 13.3  (Debian version by default)
 ```
 
 ### Backup System
@@ -100,6 +116,26 @@ supervisor:
 - Each service has a `run` script
 - s6 handles process lifecycle and restarts
 
+**Built-in services:**
+
+- **crond** (`crond.sh`) — runs `/usr/sbin/cron` under s6 supervision, enabling
+  scheduled tasks via standard cron. An hourly `container-backup` job is
+  pre-configured.
+
+### ZSH Configuration
+
+ZSH is the default shell for all container users. Two configuration files are
+provided:
+
+- `zshrc_etc.sh` → `/etc/zsh/zshrc` — system-wide ZSH defaults applied to all users
+- `zshrc_skel.sh` → `/etc/skel/.zshrc` — skeleton file copied to new user home
+  directories on creation
+
+### VIM Configuration
+
+A default `vimrc` is included and placed at `/etc/skel/.vimrc` so all users
+created with `--create-home` automatically inherit it.
+
 ## Installed Packages
 
 **Included:**
@@ -111,15 +147,8 @@ supervisor:
 - `s6` - Process supervisor
 - `sudo` - Privilege escalation
 - `tzdata` - Timezone data
+- `vim.tiny` - Lightweight text editor
 - `zsh` - Default shell
-
-**Available (commented, enable as needed):**
-
-- `bind9-dnsutils` - DNS debugging tools
-- `iputils-ping` - Ping utility
-- `nmap` / `ncat` - Network debugging
-- `git` - Version control
-- `jq` - JSON parsing
 
 ## User Configuration
 
@@ -246,14 +275,26 @@ RUN echo "UTC" > /etc/timezone \
 
 ## Project Structure
 
-```
+```text
 .
-├── Containerfile       # Container build definition
-├── README.md           # This file
-├── backup.sh           # Backup placeholder script
-├── health.sh           # Health check controller
-├── privileges          # Sudoers configuration
-└── version.sh          # Version detection script
+├── .args                    # Build arguments
+├── .gitignore               # Git ignore rules
+├── .hadolint.yaml           # Hadolint Dockerfile linter configuration
+├── .markdownlint.yaml       # Markdown linter configuration
+├── .pre-commit-config.yaml  # Pre-commit hook configuration
+├── .shellcheckrc            # ShellCheck configuration
+├── .yamllint.yaml           # YAML linter configuration
+├── Containerfile            # Container build definition
+├── README.md                # This file
+├── backup.sh                # Backup placeholder script
+├── crond.sh                 # s6 cron service runner
+├── health.sh                # Health check controller
+├── osversion-check.sh       # Built-in OS version health check
+├── privileges               # Sudoers configuration
+├── version.sh               # Version detection script
+├── vimrc                    # Default VIM configuration
+├── zshrc_etc.sh             # System-wide ZSH configuration
+└── zshrc_skel.sh            # User skeleton ZSH configuration
 ```
 
 ## License
