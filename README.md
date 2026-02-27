@@ -1,5 +1,14 @@
 # Debian Base Container
 
+> Hardened Debian (bookworm-slim) distilled into a repeatable base image for every downstream Eureka FARMS workload.
+
+| Item | Details |
+| --- | --- |
+| Owner | Adam Gautier / Blair Fontaine (planning) |
+| Registry | `gautada/debian` |
+| Status | **Ready** — plan branch: `plan/readme-upgrade` |
+| Purpose | Provide a secure Debian base with consistent backup, health, privilege, and init scaffolding for child containers. |
+
 A minimal [Debian](https://www.debian.org) base container image designed for building
 downstream application containers. Built on `debian:bookworm-slim`, this image
 prioritizes small size while providing essential infrastructure for container
@@ -17,6 +26,29 @@ This container serves as the foundation for other containers, providing:
   versions
 - **Backup infrastructure** - Placeholder backup system for downstream implementation
 - **Process supervision** - Uses s6 for managing container services
+
+## Architecture
+```
++---------------------------+
+| Downstream container      |
+|  (inherits FROM this)     |
+|    Custom services        |
++-------------+-------------+
+              ^
+              |
++-------------+-------------+
+| gautada/debian base image |
+|  • s6 init + cron         |
+|  • Health + backup hooks  |
+|  • Privilege scaffolding  |
+|  • Locale/volume setup    |
++-------------+-------------+
+              ^
+              |
++-------------+-------------+
+| debian:bookworm-slim      |
++---------------------------+
+```
 
 ## Features
 
@@ -167,6 +199,15 @@ Downstream containers can override these via build arguments:
 podman build --build-arg USER=myapp --build-arg UID=1000 --build-arg GID=1000 .
 ```
 
+## Branch & Release Model
+| Branch | Purpose |
+| --- | --- |
+| `dev` | Integration branch; all README/plan branches merge here before release. |
+| `main` | Mirrors released container definitions and tagged images. |
+| `plan/*` | Short-lived planning docs (current: `plan/readme-upgrade`). |
+
+To ship changes: open PRs into `dev`, validate pipelines, then fast-forward `main` when ready to tag/publish.
+
 ## Build
 
 ### Prerequisites
@@ -226,6 +267,15 @@ podman exec debian container-liveness
 podman exec debian container-test
 ```
 
+## Operations Playbook
+| Scenario | Steps |
+| --- | --- |
+| Run manual backup | `podman exec debian /usr/bin/container-backup` (override script upstream for app-specific logic). |
+| Extend privileges | Drop additional sudo rules into `/etc/sudoers.d/<name>` and rebuild. |
+| Add cron health checks | Place scripts under `/etc/container/health.d/*.health`; they’ll be invoked by `container-health`. |
+| Rotate timezone | Update `/etc/timezone` then relink `/etc/localtime` (see Configuration). |
+| Inspect logs | Use `podman logs debian` or mount `/var/log` via downstream services. |
+
 ## Building Downstream Containers
 
 Use this image as your base:
@@ -273,6 +323,15 @@ RUN echo "UTC" > /etc/timezone \
 
 - `8080/tcp` - Default application port (customize in downstream)
 
+## Planning Hooks & Open Work
+- **Plan branch:** `plan/readme-upgrade` (holds latest README+notes).
+- **Open issues influencing docs:**
+  - #102 Entrypoint bug — document final entrypoint guidance once resolved.
+  - #95 Issue with backup script — README now explains override path, still needs implementation.
+  - #77 Setup a full machine proxy — downstream networking guidance pending.
+  - #43 Add the check scripts for status — ties into health probe roadmap.
+- Leave the `plan-readme` topic on this repo until the plan PR merges back into `dev`.
+
 ## Project Structure
 
 ```text
@@ -296,6 +355,13 @@ RUN echo "UTC" > /etc/timezone \
 ├── zshrc_etc.sh             # System-wide ZSH configuration
 └── zshrc_skel.sh            # User skeleton ZSH configuration
 ```
+
+## Contacts
+| Role | Person |
+| --- | --- |
+| Product / Infra owner | Adam Gautier (@gautada) |
+| Planning / README upkeep | Blair Fontaine (@blairfontaine) |
+| Execution follow-up | Nyx Calder (@nyxcalder) |
 
 ## License
 
