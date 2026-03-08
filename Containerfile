@@ -51,6 +51,21 @@ RUN /bin/mkdir -p /etc/container \
  && echo "America/New_York" > /etc/timezone \
  && /bin/ln -fsv "/usr/share/zoneinfo/$(cat /etc/timezone)" /etc/localtime
 
+
+# ╭――――――――――――――――――――╮
+# │ BUILD SIGNATURE    │
+# ╰――――――――――――――――――――╯
+# The build signature records the git commit short SHA passed at build time.
+# Used by container-signature and signature-check health scripts to verify
+# that a running container matches the expected base image revision.
+ARG GIT_COMMIT
+RUN mkdir -p /etc/container \
+ && echo "${GIT_COMMIT:-unknown}" > /etc/container/signature
+COPY container-signature.sh /usr/bin/container-signature
+COPY container-basesignature.sh /usr/bin/container-basesignature
+RUN chmod +x /usr/bin/container-signature \
+ && chmod +x /usr/bin/container-basesignature
+
 # ╭――――――――――――――――――――╮
 # │ LOCALE             │
 # ╰――――――――――――――――――――╯
@@ -129,6 +144,8 @@ RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
 COPY osversion-check.sh /etc/container/health.d/osversion-check
+COPY signature-check.sh /etc/container/health.d/signature-check
+RUN chmod +x /etc/container/health.d/signature-check
 COPY packages.sh /etc/container/health.d/packages-check
 
 # ╭――――――――――――――――――――╮
