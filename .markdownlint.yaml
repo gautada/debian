@@ -6,7 +6,8 @@
 # - GitHub Super-Linter
 # - VS Code markdownlint extension
 #
-# Rule reference: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+# [Rule reference]
+# (https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
 #
 # ============================================================================
 # PRE-COMMIT SETUP
@@ -56,8 +57,8 @@
 default: true
 
 # MD013 - Line length
-# Relaxed to 120 chars for readability; disabled for code blocks, tables, and headings
-# which often need longer lines for clarity
+# Relaxed to 120 chars for readability; disabled for code blocks, tables,
+# and headings which often need longer lines for clarity
 MD013:
   line_length: 88
   code_blocks: false
@@ -65,13 +66,15 @@ MD013:
   headings: false
 
 # MD024 - Multiple headings with the same content
-# Allow duplicate headings if they are not siblings (e.g., "## Usage" under different sections)
+# Allow duplicate headings if they are not siblings (e.g., "## Usage"
+# under different sections)
 MD024:
   siblings_only: true
 
 # MD033 - Inline HTML
 # Allow specific HTML elements commonly used in GitHub markdown
-# br: line breaks, details/summary: collapsible sections, sup/sub: superscript/subscript
+# br: line breaks, details/summary: collapsible sections,
+# sup/sub: superscript/subscript
 MD033:
   allowed_elements:
     - br
@@ -81,7 +84,8 @@ MD033:
     - sub
 
 # MD040 - Fenced code blocks should have a language specified
-# Disabled: not all code blocks need syntax highlighting (e.g., plain text output)
+# Disabled: not all code blocks need syntax highlighting (e.g., plain
+# text output)
 MD040: false
 
 # MD041 - First line in file should be a top-level heading

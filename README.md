@@ -1,34 +1,38 @@
 # Debian Base Container
 
-> Hardened Debian (bookworm-slim) distilled into a repeatable base image for every downstream Eureka FARMS workload.
+> Hardened Debian (Trixie/13) distilled into a repeatable base image for
+> every downstream Eureka FARMS workload.
 
 | Item | Details |
 | --- | --- |
-| Owner | Adam Gautier / Blair Fontaine (planning) |
+| Owner | Adam Gautier (@gautada) |
 | Registry | `gautada/debian` |
-| Status | **Ready** — plan branch: `plan/readme-upgrade` |
+| Status | **Active** |
 | Purpose | Provide a secure Debian base with consistent backup, health, privilege, and init scaffolding for child containers. |
 
-A minimal [Debian](https://www.debian.org) base container image designed for building
-downstream application containers. Built on `debian:bookworm-slim`, this image
-prioritizes small size while providing essential infrastructure for container
-operations.
+A minimal [Debian](https://www.debian.org) base container image designed
+for building downstream application containers. Built on `debian:trixie-slim`
+(Debian 13), this image prioritizes small size while providing essential
+infrastructure for container operations.
 
 ## Purpose
 
 This container serves as the foundation for other containers, providing:
 
-- **Minimal footprint** - Uses `bookworm-slim` base with only essential packages
-- **Least privilege security** - Sudoers-based permission model for specific commands
+- **Minimal footprint** - Uses `trixie-slim` base with only essential packages.
+- **Least privilege security** - Sudoers-based permission model for specific
+  commands.
 - **Health monitoring** - Drop-in health check system for liveness, readiness,
-  and startup probes
-- **Version detection** - Standardized mechanism to query container software
-  versions
-- **Backup infrastructure** - Placeholder backup system for downstream implementation
-- **Process supervision** - Uses s6 for managing container services
+  and startup probes.
+- **Version detection** - Standardized mechanism to query container and OS
+  versions.
+- **Backup infrastructure** - Placeholder backup system for downstream
+  implementation.
+- **Process supervision** - Uses s6-overlay for managing container services.
 
 ## Architecture
-```
+
+```text
 +---------------------------+
 | Downstream container      |
 |  (inherits FROM this)     |
@@ -38,7 +42,7 @@ This container serves as the foundation for other containers, providing:
               |
 +-------------+-------------+
 | gautada/debian base image |
-|  • s6 init + cron         |
+|  • s6-svscan init + cron  |
 |  • Health + backup hooks  |
 |  • Privilege scaffolding  |
 |  • Locale/volume setup    |
@@ -46,7 +50,7 @@ This container serves as the foundation for other containers, providing:
               ^
               |
 +-------------+-------------+
-| debian:bookworm-slim      |
+| debian:trixie-slim        |
 +---------------------------+
 ```
 
@@ -54,321 +58,111 @@ This container serves as the foundation for other containers, providing:
 
 ### Locale
 
-The container sets UTF-8 locale to prevent terminal and application encoding issues:
+The container sets UTF-8 locale to prevent terminal and application encoding
+issues:
 
 ```text
 LANG=C.UTF-8
 LC_ALL=C.UTF-8
 ```
 
-`C.UTF-8` is a built-in glibc locale — no additional packages required.
-
 ### Volumes
 
-Four standard volume mount points are created for consistent data management:
+Standard volume mount points are created for consistent data management:
 
-| Path                         | Purpose                                |
-| ---------------------------- | -------------------------------------- |
-| `/mnt/volumes/configuration` | ConfigMaps and configuration files     |
-| `/mnt/volumes/data`          | Runtime data persisted across restarts |
-| `/mnt/volumes/backup`        | Local backup cache                     |
-| `/mnt/volumes/secrets`       | Secret files and credentials           |
+| Path | Purpose |
+| --- | --- |
+| `/mnt/volumes/configuration` | ConfigMaps and configuration files |
+| `/mnt/volumes/data` | Runtime data persisted across restarts |
+| `/mnt/volumes/backup` | Local backup cache |
+| `/mnt/volumes/secrets` | Secret files and credentials |
 
 ### Least Privilege Model
 
 The container implements a least privilege security model using sudoers:
 
-- A `privileged` group (GID 99) is created
-- The container user is added to this group
-- Specific commands are whitelisted in `/etc/sudoers.d/debian`
-- Downstream containers can extend the privileges file
+- A `privileged` group (GID 99) is created.
+- The container user is added to this group.
+- Specific commands are whitelisted in `/etc/sudoers.d/debian`.
 
-**Default allowed commands:**
+**Whitelisted commands:**
 
-- `/usr/sbin/cron` - Start the cron daemon
-- `/usr/sbin/update-ca-certificates` - Update SSL certificates
-- `/etc/cron.hourly/container-backup` - Run backup script
+- `/usr/sbin/cron`
+- `/usr/sbin/update-ca-certificates`
+- `/etc/cron.hourly/container-backup`
 
 ### Health Monitoring
 
-A drop-in health check system supports Kubernetes-style probes:
+A drop-in health check system supports Kubernetes-style probes via
+`/usr/bin/container-health`.
 
-```text
-/usr/bin/container-health     # Main health script
-/usr/bin/container-liveness   # Symlink for liveness probes
-/usr/bin/container-readiness  # Symlink for readiness probes
-/usr/bin/container-startup    # Symlink for startup probes
-/usr/bin/container-test       # Symlink for CI/CD testing
-```
+**Standard Probes:**
 
-**Built-in health checks:**
+- `/usr/bin/container-liveness`
+- `/usr/bin/container-readiness`
+- `/usr/bin/container-startup`
+- `/usr/bin/container-test` (for CI/CD validation)
 
-- `osversion-check` — verifies the OS version is as expected; installed at
-  `/etc/container/health.d/osversion-check`
+**Built-in Checks:**
 
-**Adding health checks (downstream):**
+- `osversion-check` — verifies the running OS version matches upstream.
+- `packages-check` — verifies installed packages are up to date.
 
-Place executable scripts in `/etc/container/health.d/`. Each script receives
-the probe type as an argument (`health`, `liveness`, `readiness`, `startup`,
-or `test`).
+### Standard Scripts
 
-```bash
-#!/bin/sh
-# /etc/container/health.d/myapp.health
-case "$1" in
-  liveness)  curl -sf http://localhost:8080/health ;;
-  readiness) curl -sf http://localhost:8080/ready ;;
-  *)         exit 0 ;;
-esac
-```
+| Script | Container Path | Description |
+| --- | --- | --- |
+| `version.sh` | `/usr/bin/container-version` | Returns the software/OS version. |
+| `backup.sh` | `/usr/bin/container-backup` | Placeholder for backup logic; runs hourly via cron. |
+| `crond.sh` | `/etc/services.d/crond/run` | s6 service runner for the cron daemon. |
+| `health.sh` | `/usr/bin/container-health` | Controller for the health drop-in system. |
+| `osversion-check.sh` | `/etc/container/health.d/osversion-check` | Health probe that checks Debian release. |
+| `packages.sh` | `/etc/container/health.d/packages-check` | Health probe that checks for pending updates. |
 
-### Version Detection
+### Process Supervision (s6-overlay)
 
-The `/usr/bin/container-version` script outputs the software version.
-Downstream containers should override this script to return their application
-version.
+This container uses [s6-overlay](https://github.com/just-containers/s6-overlay)
+as its init system (PID 1).
 
-```bash
-container-version
-# Output: 13.3  (Debian version by default)
-```
+- **Supervisor:** `s6-svscan` monitors `/etc/services.d`.
+- **Services:** Each service is a directory in `/etc/services.d` containing a
+  `run` script.
+- **Lifecycle:** s6 handles clean shutdowns and automatic service restarts.
 
-### Backup System
+### Shell & Editor Configuration
 
-The `/usr/bin/container-backup` script is a placeholder for downstream backup
-implementations. Override this script to implement application-specific backup
-logic.
+- **Shell:** Zsh is the default shell. System-wide configuration is at
+  `/etc/zsh/zshrc`.
+- **Skeleton:** New users inherit a baseline `.zshrc` and `.vimrc` from
+  `/etc/skel`.
+- **Editor:** `vim.tiny` is configured as the default editor.
 
-### Process Supervision
+## Build & Run
 
-Uses [s6](https://skarnet.org/software/s6/) as the init system and process
-supervisor:
-
-- Services are defined in `/etc/services.d/`
-- Each service has a `run` script
-- s6 handles process lifecycle and restarts
-
-**Built-in services:**
-
-- **crond** (`crond.sh`) — runs `/usr/sbin/cron` under s6 supervision, enabling
-  scheduled tasks via standard cron. An hourly `container-backup` job is
-  pre-configured.
-
-### ZSH Configuration
-
-ZSH is the default shell for all container users. Two configuration files are
-provided:
-
-- `zshrc_etc.sh` → `/etc/zsh/zshrc` — system-wide ZSH defaults applied to all users
-- `zshrc_skel.sh` → `/etc/skel/.zshrc` — skeleton file copied to new user home
-  directories on creation
-
-### VIM Configuration
-
-A default `vimrc` is included and placed at `/etc/skel/.vimrc` so all users
-created with `--create-home` automatically inherit it.
-
-## Installed Packages
-
-**Included:**
-
-- `ca-certificates` - SSL/TLS certificate authorities
-- `curl` - HTTP client for fetching files and testing endpoints
-- `cron` - Task scheduler
-- `procps` - Process utilities (ps, top, etc.)
-- `s6` - Process supervisor
-- `sudo` - Privilege escalation
-- `tzdata` - Timezone data
-- `vim.tiny` - Lightweight text editor
-- `zsh` - Default shell
-
-## User Configuration
-
-| Setting  | Default Value          |
-| -------- | ---------------------- |
-| Username | `debian`               |
-| UID      | `1001`                 |
-| GID      | `1001`                 |
-| Shell    | `/bin/zsh`             |
-| Home     | `/home/debian`         |
-| Groups   | `debian`, `privileged` |
-
-Downstream containers can override these via build arguments:
+### Build
 
 ```bash
-podman build --build-arg USER=myapp --build-arg UID=1000 --build-arg GID=1000 .
+podman build -t gautada/debian:latest .
 ```
 
-## Branch & Release Model
-| Branch | Purpose |
-| --- | --- |
-| `dev` | Integration branch; all README/plan branches merge here before release. |
-| `main` | Mirrors released container definitions and tagged images. |
-| `plan/*` | Short-lived planning docs (current: `plan/readme-upgrade`). |
-
-To ship changes: open PRs into `dev`, validate pipelines, then fast-forward `main` when ready to tag/publish.
-
-## Build
-
-### Prerequisites
-
-- Podman or Docker
-- Git (for cloning)
-
-### Build Commands
+### Run
 
 ```bash
-# Standard build
-podman build -t debian .
+# Standard interactive shell
+podman run -it --rm gautada/debian:latest /bin/zsh
 
-# Build without cache
-podman build --no-cache -t debian .
-
-# Build with custom user
-podman build --build-arg USER=myapp -t debian .
-```
-
-## Run
-
-### Basic Usage
-
-```bash
-# Run container
-podman run -d --name debian debian
-
-# Run with interactive shell
-podman run -it --rm debian /bin/zsh
-
-# Execute shell in running container
-podman exec -it --user 1001 debian /bin/zsh
-```
-
-### With Volumes
-
-```bash
-podman run -d --name debian \
-  -v ./config:/mnt/volumes/configuration:ro \
-  -v ./data:/mnt/volumes/data \
-  -v ./backup:/mnt/volumes/backup \
-  -v ./secrets:/mnt/volumes/secrets:ro \
-  debian
-```
-
-### Health Checks
-
-```bash
-# Check container health
-podman exec debian container-health
-
-# Check liveness
-podman exec debian container-liveness
-
-# Run tests (for CI/CD)
-podman exec debian container-test
+# Run as a background service
+podman run -d --name my-debian gautada/debian:latest
 ```
 
 ## Operations Playbook
-| Scenario | Steps |
+
+| Scenario | Command |
 | --- | --- |
-| Run manual backup | `podman exec debian /usr/bin/container-backup` (override script upstream for app-specific logic). |
-| Extend privileges | Drop additional sudo rules into `/etc/sudoers.d/<name>` and rebuild. |
-| Add cron health checks | Place scripts under `/etc/container/health.d/*.health`; they’ll be invoked by `container-health`. |
-| Rotate timezone | Update `/etc/timezone` then relink `/etc/localtime` (see Configuration). |
-| Inspect logs | Use `podman logs debian` or mount `/var/log` via downstream services. |
-
-## Building Downstream Containers
-
-Use this image as your base:
-
-```dockerfile
-FROM gautada/debian:latest
-
-# Override user if needed
-ARG USER=myapp
-RUN usermod -l $USER debian \
- && groupmod -n $USER debian \
- && mv /home/debian /home/$USER \
- && usermod -d /home/$USER $USER
-
-# Add your application
-COPY myapp /usr/bin/myapp
-
-# Add health check
-COPY myapp.health /etc/container/health.d/myapp.health
-RUN chmod +x /etc/container/health.d/myapp.health
-
-# Override version script
-COPY version.sh /usr/bin/container-version
-
-# Add service
-COPY myapp-run.sh /etc/services.d/myapp/run
-
-# Extend privileges if needed
-COPY privileges /etc/sudoers.d/myapp
-```
-
-## Configuration
-
-### Timezone
-
-Default timezone is `America/New_York`. To change, modify `/etc/timezone`
-and update the symlink:
-
-```dockerfile
-RUN echo "UTC" > /etc/timezone \
- && ln -fsv /usr/share/zoneinfo/UTC /etc/localtime
-```
-
-### Exposed Ports
-
-- `8080/tcp` - Default application port (customize in downstream)
-
-## Planning Hooks & Open Work
-- **Plan branch:** `plan/readme-upgrade` (holds latest README+notes).
-- **Open issues influencing docs:**
-  - #102 Entrypoint bug — document final entrypoint guidance once resolved.
-  - #95 Issue with backup script — README now explains override path, still needs implementation.
-  - #77 Setup a full machine proxy — downstream networking guidance pending.
-  - #43 Add the check scripts for status — ties into health probe roadmap.
-- Leave the `plan-readme` topic on this repo until the plan PR merges back into `dev`.
-
-## Project Structure
-
-```text
-.
-├── .args                    # Build arguments
-├── .gitignore               # Git ignore rules
-├── .hadolint.yaml           # Hadolint Dockerfile linter configuration
-├── .markdownlint.yaml       # Markdown linter configuration
-├── .pre-commit-config.yaml  # Pre-commit hook configuration
-├── .shellcheckrc            # ShellCheck configuration
-├── .yamllint.yaml           # YAML linter configuration
-├── Containerfile            # Container build definition
-├── README.md                # This file
-├── backup.sh                # Backup placeholder script
-├── crond.sh                 # s6 cron service runner
-├── health.sh                # Health check controller
-├── osversion-check.sh       # Built-in OS version health check
-├── privileges               # Sudoers configuration
-├── version.sh               # Version detection script
-├── vimrc                    # Default VIM configuration
-├── zshrc_etc.sh             # System-wide ZSH configuration
-└── zshrc_skel.sh            # User skeleton ZSH configuration
-```
-
-## Contacts
-| Role | Person |
-| --- | --- |
-| Product / Infra owner | Adam Gautier (@gautada) |
-| Planning / README upkeep | Blair Fontaine (@blairfontaine) |
-| Execution follow-up | Nyx Calder (@nyxcalder) |
+| Check Health | `podman exec my-debian container-health` |
+| Check Version | `podman exec my-debian container-version` |
+| Manual Backup | `podman exec my-debian container-backup` |
 
 ## License
 
 [Debian Free Software Guidelines (DFSG)](https://www.debian.org/social_contract#guidelines)
-
-## Links
-
-- [Docker Hub](https://hub.docker.com/r/gautada/debian)
-- [GitHub](https://github.com/gautada/debian)
-- [Debian Project](https://www.debian.org)
