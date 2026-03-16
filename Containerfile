@@ -4,11 +4,11 @@ FROM docker.io/library/debian:${trixie-alim} as container
 # ╭――――――――――――――――――――╮
 # │ METADATA           │
 # ╰――――――――――――――――――――╯
-LABEL org.opencontainers.image.title="${IMAGE_NAME}"
+LABEL org.opencontainers.image.title="debian"
 LABEL org.opencontainers.image.description="A Debian base container."
 LABEL org.opencontainers.image.url="https://hub.docker.com/r/gautada/debian"
 LABEL org.opencontainers.image.source="https://github.com/gautada/debian"
-LABEL org.opencontainers.image.version="${CONTAINER_VERSION}"
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
 LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 
 # ╭――――――――――――――――――――╮
