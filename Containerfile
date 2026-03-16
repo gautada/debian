@@ -1,5 +1,5 @@
-ARG IMAGE_NAME=debian
-FROM docker.io/library/debian:${trixie-alim} as container
+ARG IMAGE_VERSION=13.4
+FROM docker.io/library/debian:${IMAGE_VERSION} as container
 
 # ╭――――――――――――――――――――╮
 # │ METADATA           │
