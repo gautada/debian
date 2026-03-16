@@ -1,14 +1,5 @@
 # Debian Base Container
 
-> Hardened Debian (bookworm-slim) distilled into a repeatable base image for every downstream Eureka FARMS workload.
-
-| Item | Details |
-| --- | --- |
-| Owner | Adam Gautier / Blair Fontaine (planning) |
-| Registry | `gautada/debian` |
-| Status | **Ready** — plan branch: `plan/readme-upgrade` |
-| Purpose | Provide a secure Debian base with consistent backup, health, privilege, and init scaffolding for child containers. |
-
 A minimal [Debian](https://www.debian.org) base container image designed for building
 downstream application containers. Built on `debian:bookworm-slim`, this image
 prioritizes small size while providing essential infrastructure for container
@@ -46,7 +37,7 @@ This container serves as the foundation for other containers, providing:
               ^
               |
 +-------------+-------------+
-| debian:bookworm-slim      |
+| debian:trixie-slim        |
 +---------------------------+
 ```
 
