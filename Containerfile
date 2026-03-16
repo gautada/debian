@@ -28,6 +28,7 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 # vim.tiny - Standard editor
 # zsh - Standardized shell
 RUN apt-get update \
+ && apt-get full-upgrade --yes \
  && apt-get install --yes --no-install-recommends \
             ca-certificates \
             curl \
