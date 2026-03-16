@@ -1,6 +1,5 @@
 ARG IMAGE_NAME=debian
-ARG IMAGE_VERSION=bookworm-slim
-FROM docker.io/library/debian:${IMAGE_VERSION} as container
+FROM docker.io/library/debian:${trixie-alim} as container
 
 # ╭――――――――――――――――――――╮
 # │ METADATA           │
