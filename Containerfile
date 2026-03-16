@@ -138,8 +138,8 @@ COPY packages.sh /etc/container/health.d/packages-check
 # The /etc/zsh/zshrc provides system-wide defaults.
 # The /etc/skel/.zshrc is copied to user home on creation via useradd --create-home.
 RUN /bin/mkdir -p /etc/zsh
-COPY zshrc_etc.sh /etc/zsh/zshrc
-COPY zshrc_skel.sh /etc/skel/.zshrc
+COPY zshrc_etc.zsh /etc/zsh/zshrc
+COPY zshrc_skel.zsh /etc/skel/.zshrc
 
 # ╭――――――――――――――――――――╮
 # │ VIM                │

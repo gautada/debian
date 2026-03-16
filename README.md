@@ -19,6 +19,7 @@ This container serves as the foundation for other containers, providing:
 - **Process supervision** - Uses s6 for managing container services
 
 ## Architecture
+
 ```
 +---------------------------+
 | Downstream container      |
@@ -74,7 +75,7 @@ The container implements a least privilege security model using sudoers:
 - Specific commands are whitelisted in `/etc/sudoers.d/debian`
 - Downstream containers can extend the privileges file
 
-**Default allowed commands:**
+#### Default allowed commands
 
 - `/usr/sbin/cron` - Start the cron daemon
 - `/usr/sbin/update-ca-certificates` - Update SSL certificates
@@ -92,12 +93,12 @@ A drop-in health check system supports Kubernetes-style probes:
 /usr/bin/container-test       # Symlink for CI/CD testing
 ```
 
-**Built-in health checks:**
+#### Built-in health checks
 
 - `osversion-check` — verifies the OS version is as expected; installed at
   `/etc/container/health.d/osversion-check`
 
-**Adding health checks (downstream):**
+#### Adding health checks (downstream)
 
 Place executable scripts in `/etc/container/health.d/`. Each script receives
 the probe type as an argument (`health`, `liveness`, `readiness`, `startup`,
@@ -139,7 +140,7 @@ supervisor:
 - Each service has a `run` script
 - s6 handles process lifecycle and restarts
 
-**Built-in services:**
+#### Built-in services
 
 - **crond** (`crond.sh`) — runs `/usr/sbin/cron` under s6 supervision, enabling
   scheduled tasks via standard cron. An hourly `container-backup` job is
@@ -191,13 +192,15 @@ podman build --build-arg USER=myapp --build-arg UID=1000 --build-arg GID=1000 .
 ```
 
 ## Branch & Release Model
+
 | Branch | Purpose |
 | --- | --- |
 | `dev` | Integration branch; all README/plan branches merge here before release. |
 | `main` | Mirrors released container definitions and tagged images. |
 | `plan/*` | Short-lived planning docs (current: `plan/readme-upgrade`). |
 
-To ship changes: open PRs into `dev`, validate pipelines, then fast-forward `main` when ready to tag/publish.
+To ship changes: open PRs into `dev`, validate pipelines, then fast-forward
+`main` when ready to tag/publish.
 
 ## Build
 
@@ -259,6 +262,7 @@ podman exec debian container-test
 ```
 
 ## Operations Playbook
+
 | Scenario | Steps |
 | --- | --- |
 | Run manual backup | `podman exec debian /usr/bin/container-backup` (override script upstream for app-specific logic). |
@@ -315,6 +319,7 @@ RUN echo "UTC" > /etc/timezone \
 - `8080/tcp` - Default application port (customize in downstream)
 
 ## Planning Hooks & Open Work
+
 - **Plan branch:** `plan/readme-upgrade` (holds latest README+notes).
 - **Open issues influencing docs:**
   - #102 Entrypoint bug — document final entrypoint guidance once resolved.
@@ -348,6 +353,7 @@ RUN echo "UTC" > /etc/timezone \
 ```
 
 ## Contacts
+
 | Role | Person |
 | --- | --- |
 | Product / Infra owner | Adam Gautier (@gautada) |
