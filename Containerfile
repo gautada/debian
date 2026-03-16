@@ -1,4 +1,4 @@
-ARG IMAGE_VERSION=13.4
+ARG IMAGE_VERSION=13-slim
 FROM docker.io/library/debian:${IMAGE_VERSION} as container
 
 # ╭――――――――――――――――――――╮
