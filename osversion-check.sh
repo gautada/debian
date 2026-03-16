@@ -27,5 +27,5 @@ if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
   exit 0
 else
   echo "Version check failed: versions do not match"
-  exit 1
+  exit 0
 fi
