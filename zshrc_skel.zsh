@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 # shellcheck shell=bash disable=SC2034
 # ==============================================================================
 # ~/.zshrc - Zsh Configuration for Container Environments
