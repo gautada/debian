@@ -47,8 +47,7 @@ RUN apt-get update \
 # ╰―――――――――――――――――――╯
 # Set the timezone to east coast us so logs and interaction do not need to be
 # time shifted.
-RUN /bin/mkdir -p /etc/container \
- && echo "America/New_York" > /etc/timezone \
+RUN echo "America/New_York" > /etc/timezone \
  && /bin/ln -fsv "/usr/share/zoneinfo/$(cat /etc/timezone)" /etc/localtime
 
 # ╭――――――――――――――――――――╮
@@ -112,6 +111,22 @@ RUN /usr/sbin/groupadd --gid 99 privileged
 COPY version.sh /usr/bin/container-version
 
 # ╭――――――――――――――――――――╮
+# │ BUILD SIGNATURE    │
+# ╰――――――――――――――――――――╯
+# This signature is added to the container build via a build-arg parameter.
+# The signature-container.sh script returns the local signature.
+# The signature-repository.sh script returns the latest repository signature.
+ARG GIT_COMMIT
+RUN /bin/mkdir -p /etc/container \
+ && echo "${GIT_COMMIT:-unknown}" > /etc/container/signature
+COPY signature.sh /usr/bin/container-signature
+COPY signature-repository.sh /usr/bin/container-basesignature
+COPY signature-check.sh /usr/bin/container-signaturecheck
+RUN chmod +x /usr/bin/container-signature \
+             /usr/bin/container-basesignature \
+             /usr/bin/container-signaturecheck
+
+# ╭――――――――――――――――――――╮
 # │ HEALTH             │
 # ╰――――――――――――――――――――╯
 # The health mechanism uses the the health.d drop-in to hold scripts that test
@@ -126,10 +141,12 @@ COPY health.sh /usr/bin/container-health
 RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-liveness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
+ && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
 COPY osversion-check.sh /etc/container/health.d/osversion-check
 COPY packages.sh /etc/container/health.d/packages-check
+COPY signature-check.sh /etc/container/health.d/signature-check
 
 # ╭――――――――――――――――――――╮
 # │ ZSH                │
