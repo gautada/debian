@@ -4,14 +4,8 @@
 # XCode - Project files 
 *.xcodeproj/
 
-# Nova - Editor files
-*.nova/
-
 # Desktop Services Store - Custom view preferences
 .DS_Store
-
-# All .git files are ignored this is mainly for .dockerignore.
-**.git/
 
 # **Volume Folders** are used in development to set runtime data, usuaully 
 # this is private data and should almost **NEVER** be loaded into version
@@ -23,8 +17,16 @@
 manifest/
 
 # `.dockerignore` file allows you to specify a list of files or directories 
-# that Docker is to ignore during the build process.
+# that Docker is to ignore during the build process. To create jusr
+# symlink to this files `ln -s .gitignore .dockerignore`
 .dockerignore
-.commit
 
 .env
+.flake8
+.hadolint.yaml
+.htmlhintrc
+.jscpd.json
+.markdownlint.yaml
+.pre-commit-config.yaml
+.sqlfluff
+.yamllint.yaml
