@@ -14,6 +14,7 @@ name: "Continuous Integration: Build and Publish Multi-Architecture Container Im
 permissions:
   checks: write
   statuses: write
+  contents: read
 
 jobs:
   check:
