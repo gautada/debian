@@ -145,7 +145,8 @@ RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
 COPY osversion-check.sh /etc/container/health.d/osversion-check
-COPY packages.sh /etc/container/health.d/packages-check
+COPY packages-check.sh /etc/container/health.d/packages-check
+COPY appversion-check.sh /etc/container/health.d/appversion-check
 # COPY signature-check.sh /etc/container/health.d/signature-check
 
 # ╭――――――――――――――――――――╮
