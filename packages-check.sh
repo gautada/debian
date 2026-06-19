@@ -7,6 +7,12 @@
 # This script cleans up any temporary cache created during its execution
 # to keep the container image as small as possible.
 
+# Check for root privileges
+if [ "$(id -u)" -ne 0 ]; then
+    echo "packages-check: skipping (requires root)"
+    exit 0
+fi
+
 # Refresh the package index to detect available updates
 if ! apt-get update -qq 2>/dev/null; then
     echo "packages-check: failed to update package index"
