@@ -1,7 +1,10 @@
 # Debian Base Container
-Base Debian image for downstream application containers with s6 supervision, cron, health checks, and common operational helpers.
+
+Base Debian image for downstream application containers with s6 supervision,
+cron, health checks, and common operational helpers.
 
 ## Base image and build args
+
 - Base image: `docker.io/library/debian:${IMAGE_VERSION}`
 - Default `IMAGE_VERSION`: `13-slim`
 - Optional build args:
@@ -11,6 +14,7 @@ Base Debian image for downstream application containers with s6 supervision, cro
   - `GID` (default `1001`)
 
 Example build:
+
 ```bash
 podman build -t debian \
   --build-arg IMAGE_VERSION=13-slim \
@@ -19,7 +23,9 @@ podman build -t debian \
 ```
 
 ## What this image configures
-- Installs: `ca-certificates`, `curl`, `cron`, `procps`, `s6`, `sudo`, `tzdata`, `vim.tiny`, `zsh`
+
+- Installs: `ca-certificates`, `curl`, `cron`, `procps`, `s6`, `sudo`,
+  `tzdata`, `vim.tiny`, `zsh`
 - Sets timezone to `America/New_York`
 - Sets locale:
   - `LANG=C.UTF-8`
@@ -35,15 +41,16 @@ podman build -t debian \
 - Exposes `8080/tcp`
 
 ## Runtime helpers
-- `/usr/bin/container-version`  
+
+- `/usr/bin/container-version`
   Prints `/etc/debian_version` by default.
-- `/usr/bin/container-backup`  
+- `/usr/bin/container-backup`
   Placeholder backup script; default output is informational only.
-- `/usr/bin/container-signature`  
+- `/usr/bin/container-signature`
   Prints the local build signature from `/etc/container/signature`.
-- `/usr/bin/container-basesignature`  
+- `/usr/bin/container-basesignature`
   Fetches the latest short commit from `gautada/debian` on GitHub (`main`).
-- `/usr/bin/container-signaturecheck`  
+- `/usr/bin/container-signaturecheck`
   Compares local and base signatures.
 - `/usr/bin/container-health` and symlinks:
   - `container-liveness`
@@ -52,37 +59,50 @@ podman build -t debian \
   - `container-test`
 
 ## Health check behavior
+
 The health controller currently reads executable drop-ins from:
+
 - `/etc/health.d`
 
 Built-in checks copied by the image:
+
 - `/etc/health.d/osversion-check`
 - `/etc/health.d/packages-check`
 - `/etc/health.d/appversion-check`
 
 To add downstream checks, copy executable scripts into `/etc/health.d/`.
-Each script receives the check type (for example `liveness`, `readiness`, or `startup`) as argument 1.
+Each script receives the check type (for example `liveness`, `readiness`, or
+`startup`) as argument 1.
 
 ## Cron service
+
 The image includes an s6 service at:
+
 - `/etc/services.d/crond/run`
 
 It runs:
+
 - `/usr/sbin/cron -f -L 8`
 
 An hourly job is prewired:
+
 - `/etc/cron.hourly/container-backup` -> `/usr/bin/container-backup`
 
 ## Sudo privileges
+
 Default sudo rules are in:
+
 - `/etc/sudoers.d/debian`
 
 Current defaults include `NOPASSWD` access for:
+
 - `/usr/sbin/update-ca-certificates`
 - `/usr/bin/apt update`
-- targeted `apt install --yes ...` for select troubleshooting tools (`bind9-dnsutils`, `iputils-ping`, `nmap`, `ncat`, `git`, `jq`)
+- targeted `apt install --yes ...` for select troubleshooting tools
+  (`bind9-dnsutils`, `iputils-ping`, `nmap`, `ncat`, `git`, `jq`)
 
 ## User defaults
+
 - Username: `debian`
 - UID: `1001`
 - GID: `1001`
@@ -91,6 +111,7 @@ Current defaults include `NOPASSWD` access for:
 - Supplementary group: `privileged`
 
 Build with custom user values:
+
 ```bash
 podman build -t debian \
   --build-arg USER=myapp \
@@ -100,17 +121,21 @@ podman build -t debian \
 ```
 
 ## Run examples
+
 Start container:
+
 ```bash
 podman run -d --name debian debian
 ```
 
 Interactive shell:
+
 ```bash
 podman run --rm -it debian /bin/zsh
 ```
 
 Run with standard volume mounts:
+
 ```bash
 podman run -d --name debian \
   -v ./config:/mnt/volumes/configuration:ro \
@@ -121,6 +146,7 @@ podman run -d --name debian \
 ```
 
 Run health checks:
+
 ```bash
 podman exec debian container-health
 podman exec debian container-liveness
@@ -128,6 +154,7 @@ podman exec debian container-test
 ```
 
 ## Downstream usage notes
+
 - Override `/usr/bin/container-backup` with app-specific backup logic.
 - Override `/usr/bin/container-version` to report your app version.
 - Add service directories under `/etc/services.d/<service>/run`.
@@ -135,6 +162,7 @@ podman exec debian container-test
 - Extend sudo policy via additional files in `/etc/sudoers.d`.
 
 ## Project structure
+
 ```text
 .
 ├── .args
@@ -168,4 +196,6 @@ podman exec debian container-test
 ```
 
 ## License
-[Debian Free Software Guidelines (DFSG)](https://www.debian.org/social_contract#guidelines)
+
+[Debian Free Software Guidelines
+(DFSG)](https://www.debian.org/social_contract#guidelines)
