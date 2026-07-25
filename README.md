@@ -18,6 +18,51 @@ This container serves as the foundation for other containers, providing:
 - **Backup infrastructure** - Placeholder backup system for downstream implementation
 - **Process supervision** - Uses s6 for managing container services
 
+## Capabilities
+
+### Packages
+
+- ca-sertificate - Needed to support all manor of SSL stuf
+- cron - Scheduler
+- procps - System information 
+- s6 - Control container processes
+- sudo - Priviledged permissions
+- tzdata - Timezone data
+- vim.tiny - Standard editor
+- zsh - Standardized shell
+
+### Timezone
+
+Set the default timezone to `America/New_York`
+
+### Locale
+
+Set the default encoding to `UTF-8` to make sure container does not fall to
+`ASCII`.
+
+### Volumes
+
+Four volumes mounts are created for this and downstream containers:
+- `/mnt/volumes/data`: The persistent content/data for the running container
+- `/mnt/volumes/backups`: Location for standard backups
+- `/mnt/volumes/configuration`: Location to mount configmaps
+- `/mnt/volumes/secrets`: Mountpoint for secret data
+
+### Daemons
+
+#### CRON(Backup)
+
+The `crond` daemon is setup primarily to provide hourly backups.
+
+### Privilege
+
+The `debian` sudoers file provides access to basic commands, for the container
+the to be able update installed packages and update the SSL certificates. Also,
+there are multiple `apt install` commands allowed for packages you may need
+downstream. These packages are enabled to be able to install as needed to save
+overall image size.
+
+
 ## Architecture
 
 ```

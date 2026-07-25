@@ -18,10 +18,10 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 # have the base capabilities across all containers.  This section should
 # install and then clean the package management system.
 #
-# ca-sertificate - Needed to support all manor of SSL stuff
-# curl - To fetch remote files and test http(s) endpoint
+# ca-certificate - Needed to support all manor of SSL stuff
+# curl - HTTP(s) client
 # cron - Scheduler
-# procps - Utilities for system information
+# procps - System information
 # s6 - Control container processes
 # sudo - Priviledged permissions
 # tzdata - Timezone data
@@ -30,15 +30,7 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 RUN apt-get update \
  && apt-get full-upgrade --yes \
  && apt-get install --yes --no-install-recommends \
-            ca-certificates \
-            curl \
-            cron \
-            procps \
-            s6 \
-            sudo \
-            tzdata \
-            vim.tiny \
-            zsh \
+            ca-certificates curl cron procps s6 sudo tzdata vim.tiny zsh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -71,25 +63,17 @@ RUN /bin/mkdir -p /mnt/volumes/configuration \
                   /mnt/volumes/backup \
                   /mnt/volumes/secrets
  
-# ╭―――――――――――――――――――╮
-# │ BACKUP            │
-# ╰―――――――――――――――――――╯
-COPY backup.sh /usr/bin/container-backup
-
-# ╭――――――――――――――――――――╮
-# │ ENTRYPOINT         │
-# ╰――――――――――――――――――――╯
-RUN mkdir -p /etc/services.d
-
-
-# ╭――――――――――――――――――――╮
-# │ CROND              │
-# ╰――――――――――――――――――――╯
+# ╭――――――――――――――――――――――――╮
+# │ DAEMON - CROND(Backup) │
+# ╰――――――――――――――――――――――――╯
 # This container implements and runs crond.  This is used for scheduled tasks
 # within the container.
-COPY crond.sh /etc/services.d/crond/run
+COPY etc/services.d/crond/run /etc/services.d/crond/run
+# This is the default container backup script. The intention is that the
+# downstream containers would overload and replace this script with their own
+# backup definition.
+COPY usr/bin/container-backup /usr/bin/container-backup
 RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
-
 
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
@@ -98,17 +82,17 @@ RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
 # a priviliges file into a drop-in folder.  A privileges files is in a sudoers
 # file format.  This defines what explicit commands can be run by the
 # privileged user group.  
-COPY privileges /etc/sudoers.d/debian
+COPY etc/sudoers.d/debian /etc/sudoers.d/debian
 RUN /usr/sbin/groupadd --gid 99 privileged
 
 # ╭――――――――――――――――――――╮
 # │ VERSION            │
 # ╰――――――――――――――――――――╯
-# The Version capability provides an easy way for getting the version of the
+# The version capability provides an easy way for getting the version of the
 # software within the container.  This is usuallly used in the CICD process to
 # confirm the intended version is the version that was built.  The version file
 # is just a script that returns ONLY the version of the software running.
-COPY version.sh /usr/bin/container-version
+COPY usr/bin/container-version /usr/bin/container-version
 
 # ╭――――――――――――――――――――╮
 # │ BUILD SIGNATURE    │
@@ -119,9 +103,9 @@ COPY version.sh /usr/bin/container-version
 ARG GIT_COMMIT
 RUN /bin/mkdir -p /etc/container \
  && echo "${GIT_COMMIT:-unknown}" > /etc/container/signature
-COPY signature.sh /usr/bin/container-signature
-COPY signature-repository.sh /usr/bin/container-basesignature
-COPY signature-check.sh /usr/bin/container-signaturecheck
+COPY usr/bin/container-signature /usr/bin/container-signature
+COPY usr/bin/container-basesignature /usr/bin/container-basesignature
+COPY usr/bin/container-signaturecheck /usr/bin/container-signaturecheck
 RUN chmod +x /usr/bin/container-signature \
              /usr/bin/container-basesignature \
              /usr/bin/container-signaturecheck
@@ -137,17 +121,16 @@ RUN chmod +x /usr/bin/container-signature \
 # independently of the environment and configuration it is intended to run
 # within. For downstream containers just define a health script and put in the
 # /etc/container/health.d/ drop-in folder.
-COPY health.sh /usr/bin/container-health
+COPY usr/bin/container-health /usr/bin/container-health
 RUN /bin/mkdir -p /etc/container/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-liveness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
-COPY osversion-check.sh /etc/container/health.d/osversion-check
-COPY packages-check.sh /etc/container/health.d/packages-check
-COPY appversion-check.sh /etc/container/health.d/appversion-check
-# COPY signature-check.sh /etc/container/health.d/signature-check
+COPY etc/health.d/osversion-check /etc/health.d/osversion-check
+COPY etc/health.d/packages-check /etc/health.d/packages-check
+COPY etc/health.d/appversion-check /etc/health.d/appversion-check
 
 # ╭――――――――――――――――――――╮
 # │ ZSH                │
@@ -155,9 +138,8 @@ COPY appversion-check.sh /etc/container/health.d/appversion-check
 # Configure zsh with system-wide and user skeleton configurations.
 # The /etc/zsh/zshrc provides system-wide defaults.
 # The /etc/skel/.zshrc is copied to user home on creation via useradd --create-home.
-RUN /bin/mkdir -p /etc/zsh
-COPY zshrc_etc.zsh /etc/zsh/zshrc
-COPY zshrc_skel.zsh /etc/skel/.zshrc
+COPY etc/zsh/zshrc /etc/zsh/zshrc
+COPY etc/skel/.zshrc /etc/skel/.zshrc
 
 # ╭――――――――――――――――――――╮
 # │ VIM                │
@@ -166,7 +148,7 @@ COPY zshrc_skel.zsh /etc/skel/.zshrc
 # Copied to /etc/skel/.vimrc so all users created with --create-home
 # inherit it automatically. Also explicitly placed at /home/debian/.vimrc
 # to satisfy the issue requirement for the default container user.
-COPY vimrc /etc/skel/.vimrc
+COPY etc/skel/.vimrc /etc/skel/.vimrc
 
 # ╭――――――――――――――――――――╮
 # │ USER               │

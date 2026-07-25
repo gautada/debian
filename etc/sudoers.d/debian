@@ -8,7 +8,6 @@
 # For testing purposes
 # %privileged ALL = (ALL) NOPASSWD: /etc/cron.hourly/container-backup
 
-
 # apt update provides the ability to update packages
 %privileged ALL = (ALL) NOPASSWD: /usr/bin/apt update
 
