@@ -1,3 +1,0 @@
-# ShellCheck configuration
-shell=sh
-disable=SC3040,SC3020,SC3010,SC3010
