@@ -13,7 +13,7 @@
 # continue running all the drop-ins and return a non-zero to represent
 # unhealthy.  Otherwise just return 0 to report positive health.
 
-HEALTHD="/etc/container/health.d"
+HEALTHD="/etc/health.d"
 
 if [ ! -d "$HEALTHD" ]; then
  echo "Health drop-in directory not found"

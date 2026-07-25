@@ -59,7 +59,7 @@ ENV LC_ALL=C.UTF-8
 # backup functions to have a local cahce.  Secrets provides a mount point for
 # secret files to be accessible.
 RUN /bin/mkdir -p /mnt/volumes/configuration \
-                  /mnt/volumes/data \ 
+                  /mnt/volumes/data \
                   /mnt/volumes/backup \
                   /mnt/volumes/secrets
  
@@ -120,11 +120,10 @@ RUN chmod +x /usr/bin/container-signature \
 # container is working.  This means that the container should be able to run
 # independently of the environment and configuration it is intended to run
 # within. For downstream containers just define a health script and put in the
-# /etc/container/health.d/ drop-in folder.
+# /etc/health.d/ drop-in folder.
 COPY usr/bin/container-health /usr/bin/container-health
-RUN /bin/mkdir -p /etc/container/health.d \
+RUN /bin/mkdir -p /etc/health.d \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-liveness \
- && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-readiness \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-startup \
  && /bin/ln -fsv /usr/bin/container-health /usr/bin/container-test
@@ -162,13 +161,13 @@ ARG USER=debian
 ARG UID=1001
 ARG GID=1001
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Note: Password is disabled (locked) for container security. Access is controlled
+# Note: Password login is locked for container security. Access is controlled
 # externally via podman/docker exec. Sudo uses NOPASSWD rules in /etc/sudoers.d/debian.
-RUN /usr/sbin/groupadd --gid $UID $USER \
+RUN /usr/sbin/groupadd --gid $GID $USER \
  && /usr/sbin/useradd --create-home --gid $GID --shell /bin/zsh \
                       --uid $UID $USER \
  && /usr/sbin/usermod -aG privileged $USER \
- && /usr/bin/passwd -d $USER \
+ && /usr/bin/passwd -l $USER \
  && /bin/chown -R $USER:$USER /mnt/volumes/backup \
  && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
  && /bin/chown -R $USER:$USER /mnt/volumes/data \
