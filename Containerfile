@@ -159,7 +159,7 @@ COPY etc/skel/.vimrc /etc/skel/.vimrc
 # of volume mount folders.
 ARG USER=debian
 ARG UID=1001
-ARG GID=1001
+ARG GID=$UID
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Note: Password login is locked for container security. Access is controlled
 # externally via podman/docker exec. Sudo uses NOPASSWD rules in /etc/sudoers.d/debian.
