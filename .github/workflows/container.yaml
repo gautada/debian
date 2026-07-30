@@ -18,13 +18,13 @@ permissions:
   security-events: write
 jobs:
   check:
-    uses: gautada/cicd/.github/workflows/ci-linter.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-linter.yaml@ai
   deep-scan:
     needs: check
-    uses: gautada/cicd/.github/workflows/ci-deep-scan.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-deep-scan.yaml@ai
   build-arm64:
     needs: check
-    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@ai
     with:
       architecture: "arm64"
     secrets:
@@ -32,7 +32,7 @@ jobs:
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
   build-amd64:
     needs: check
-    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@ai
     with:
       architecture: "amd64"
     secrets:
@@ -40,7 +40,7 @@ jobs:
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
   publish:
     needs: [build-arm64, build-amd64]
-    uses: gautada/cicd/.github/workflows/ci-podman-publish.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-podman-publish.yaml@ai
     with:
       architectures: '["arm64", "amd64"]'
     secrets:
@@ -48,19 +48,19 @@ jobs:
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
   clean:
     needs: [publish]
-    uses: gautada/cicd/.github/workflows/ci-registry-clean.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-registry-clean.yaml@ai
     secrets:
       REGISTRY_USERNAME: ${{ secrets.DOCKERIO_REGISTRY }}
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
   test:
     needs: [clean]
-    uses: gautada/cicd/.github/workflows/ci-container-test.yaml@main
+    uses: gautada/cicd/.github/workflows/ci-container-test.yaml@ai
     secrets:
       REGISTRY_USERNAME: ${{ secrets.DOCKERIO_REGISTRY }}
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
   release:
     needs: [test]
-    uses: gautada/cicd/.github/workflows/cd-tag-latest.yaml@main
+    uses: gautada/cicd/.github/workflows/cd-tag-latest.yaml@ai
     secrets:
       REGISTRY_USERNAME: ${{ secrets.DOCKERIO_REGISTRY }}
       REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
