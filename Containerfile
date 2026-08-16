@@ -172,6 +172,8 @@ RUN /usr/sbin/groupadd --gid $GID $USER \
  && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
  && /bin/chown -R $USER:$USER /mnt/volumes/data \
  && /bin/chown -R $USER:$USER /mnt/volumes/secrets
+ # PASSWORD="$(openssl rand -base64 24)"
+ # echo "$USER:$PASSWORD" | /usr/sbin/chpasswd
 
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
