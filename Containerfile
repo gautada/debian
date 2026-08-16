@@ -148,6 +148,7 @@ COPY etc/skel/.zshrc /etc/skel/.zshrc
 # inherit it automatically. Also explicitly placed at /home/debian/.vimrc
 # to satisfy the issue requirement for the default container user.
 COPY etc/skel/.vimrc /etc/skel/.vimrc
+COPY etc/skel/.vimrc /root/.vimrc
 
 # ╭――――――――――――――――――――╮
 # │ USER               │
@@ -172,6 +173,9 @@ RUN /usr/sbin/groupadd --gid $GID $USER \
  && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
  && /bin/chown -R $USER:$USER /mnt/volumes/data \
  && /bin/chown -R $USER:$USER /mnt/volumes/secrets
+ # When you overload the user in a downstream container
+ # PASSWORD="$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)"
+ # printf '%s:%s\n' "$USER" "$PASSWORD" | /usr/sbin/chpasswd
 
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
