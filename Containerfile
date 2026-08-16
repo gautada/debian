@@ -148,6 +148,7 @@ COPY etc/skel/.zshrc /etc/skel/.zshrc
 # inherit it automatically. Also explicitly placed at /home/debian/.vimrc
 # to satisfy the issue requirement for the default container user.
 COPY etc/skel/.vimrc /etc/skel/.vimrc
+COPY etc/skel/.vimrc /root/.vimrc
 
 # ╭――――――――――――――――――――╮
 # │ USER               │
