@@ -173,8 +173,9 @@ RUN /usr/sbin/groupadd --gid $GID $USER \
  && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
  && /bin/chown -R $USER:$USER /mnt/volumes/data \
  && /bin/chown -R $USER:$USER /mnt/volumes/secrets
- # PASSWORD="$(openssl rand -base64 24)"
- # echo "$USER:$PASSWORD" | /usr/sbin/chpasswd
+ # When you overload the user in a downstream container
+ # PASSWORD="$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)"
+ # printf '%s:%s\n' "$USER" "$PASSWORD" | /usr/sbin/chpasswd
 
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
