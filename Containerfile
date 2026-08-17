@@ -73,7 +73,8 @@ COPY etc/services.d/crond/run /etc/services.d/crond/run
 # downstream containers would overload and replace this script with their own
 # backup definition.
 COPY usr/bin/container-backup /usr/bin/container-backup
-RUN /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
+RUN chmod +x /usr/bin/container-backup \
+ && /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
 
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
@@ -93,6 +94,7 @@ RUN /usr/sbin/groupadd --gid 99 privileged
 # confirm the intended version is the version that was built.  The version file
 # is just a script that returns ONLY the version of the software running.
 COPY usr/bin/container-version /usr/bin/container-version
+RUN chmod +x /usr/bin/container-version
 
 # ╭――――――――――――――――――――╮
 # │ BUILD SIGNATURE    │
@@ -130,6 +132,8 @@ RUN /bin/mkdir -p /etc/health.d \
 COPY etc/health.d/osversion-check /etc/health.d/osversion-check
 COPY etc/health.d/packages-check /etc/health.d/packages-check
 COPY etc/health.d/appversion-check /etc/health.d/appversion-check
+RUN chmod +x /usr/bin/container-health /etc/health.d/osversion-check \
+             /etc/health.d/packages-check /etc/health.d/appversion-check
 
 # ╭――――――――――――――――――――╮
 # │ ZSH                │
