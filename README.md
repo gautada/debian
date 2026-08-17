@@ -201,3 +201,7 @@ podman exec debian container-test
 
 [Debian Free Software Guidelines
 (DFSG)](https://www.debian.org/social_contract#guidelines)
+
+## Notes
+
+2026-08-16: Updating to fix package test failue
