@@ -163,7 +163,7 @@ COPY etc/skel/.vimrc /root/.vimrc
 # privileged group and the default shell will be setup.  As well as ownership
 # of volume mount folders.
 ARG USER=debian
-ARG UID=1001
+ARG UID=1000
 ARG GID=$UID
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Note: Password login is locked for container security. Access is controlled
@@ -171,23 +171,28 @@ ARG GID=$UID
 RUN /usr/sbin/groupadd --gid $GID $USER \
  && /usr/sbin/useradd --create-home --gid $GID --shell /bin/zsh \
                       --uid $UID $USER \
- && /usr/sbin/usermod -aG privileged $USER \
- && /usr/bin/passwd -l $USER \
- && /bin/chown -R $USER:$USER /mnt/volumes/backup \
- && /bin/chown -R $USER:$USER /mnt/volumes/configuration \
- && /bin/chown -R $USER:$USER /mnt/volumes/data \
- && /bin/chown -R $USER:$USER /mnt/volumes/secrets
+ && /usr/sbin/usermod -aG privileged,uucp $USER \
+ && /usr/bin/passwd -l $USER
  # When you overload the user in a downstream container
  # PASSWORD="$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)"
  # printf '%s:%s\n' "$USER" "$PASSWORD" | /usr/sbin/chpasswd
 
 # ╭――――――――――――――――――――╮
-# │ CONTAINER          │
+# │ FILES              │
 # ╰――――――――――――――――――――╯
-ENTRYPOINT [ "/usr/bin/s6-svscan" , "/etc/services.d" ]
+WORKDIR /home/$USER
+RUN /bin/chown -R $USER:uucp /mnt/volumes/backup \
+ && /bin/chown -R $USER:uucp /mnt/volumes/configuration \
+ && /bin/chown -R $USER:uucp /mnt/volumes/data \
+ && /bin/chown -R $USER:uucp /mnt/volumes/secrets
 VOLUME /mnt/volumes/backup
 VOLUME /mnt/volumes/configuration
 VOLUME /mnt/volumes/data
 VOLUME /mnt/volumes/secrets
+
+# ╭――――――――――――――――――――╮
+# │ CONTAINER          │
+# ╰――――――――――――――――――――╯
+ENTRYPOINT [ "/usr/bin/s6-svscan" , "/etc/services.d" ]
 EXPOSE 8080/tcp
-WORKDIR /
+# WORKDIR /
