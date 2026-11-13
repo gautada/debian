@@ -2,11 +2,7 @@
 #
 # This provides elevated access as needed for the user of the container.
 #
-# %privileged ALL = (ALL) NOPASSWD: /usr/sbin/cron
 %privileged ALL = (ALL) NOPASSWD: /usr/sbin/update-ca-certificates
-
-# For testing purposes
-# %privileged ALL = (ALL) NOPASSWD: /etc/cron.hourly/container-backup
 
 # apt update provides the ability to update packages
 %privileged ALL = (ALL) NOPASSWD: /usr/bin/apt update
