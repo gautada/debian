@@ -52,20 +52,18 @@ system. s6-svscan runs as PID 1 and supervises all services defined under
 Process tree at runtime:
 
 ```text
-PID 1: s6-svscan /etc/services.d    [root]
+PID 1: s6-svscan /etc/services.d    [debian]
   |
-  +-- s6-supervise crond             [root]
+  +-- s6-supervise idle              [debian]
   |     |
-  |     +-- /usr/sbin/cron -f -L 8   [root]
+  |     +-- sleep infinity           [debian]
   |
-  +-- s6-supervise <app-service>     [root]
+  +-- s6-supervise <app-service>     [debian]
         |
-        +-- application              [debian, via s6-setuidgid]
+        +-- application              [debian]
 ```
 
-s6-svscan runs as root so it can supervise services that require root
-privileges (such as crond). Application services should drop privileges using
-`s6-setuidgid` in their `run` scripts (see below).
+The container runs as `USER debian`. All services run under the debian user.
 
 ### Service directory convention
 
@@ -104,53 +102,43 @@ COPY etc/services.d/myapp/run /etc/services.d/myapp/run
 RUN chmod +x /etc/services.d/myapp/run
 ```
 
-Example `run` script for a service that runs as the `debian` user:
+Example `run` script:
 
 ```sh
 #!/bin/sh
-exec s6-setuidgid debian /usr/bin/myapp --foreground
+exec /usr/bin/myapp --foreground
 ```
-
-Example `run` script for a service that requires root:
-
-```sh
-#!/bin/sh
-exec /usr/sbin/my-root-daemon -f
-```
-
-Use `s6-setuidgid <user>` to drop privileges for application services. Only
-services that genuinely require root (like crond) should omit it.
 
 ### Runtime service management
 
 Check service status:
 
 ```bash
-s6-svstat /etc/services.d/crond
+s6-svstat /etc/services.d/idle
 ```
 
 Restart a service (stop then start):
 
 ```bash
-s6-svc -r /etc/services.d/crond
+s6-svc -r /etc/services.d/idle
 ```
 
 Stop a service:
 
 ```bash
-s6-svc -d /etc/services.d/crond
+s6-svc -d /etc/services.d/idle
 ```
 
 Start a stopped service:
 
 ```bash
-s6-svc -u /etc/services.d/crond
+s6-svc -u /etc/services.d/idle
 ```
 
 Send a signal to a service (e.g., SIGHUP):
 
 ```bash
-s6-svc -h /etc/services.d/crond
+s6-svc -h /etc/services.d/idle
 ```
 
 These commands work from inside the container via `podman exec` or
@@ -202,9 +190,8 @@ brought down. Use it for final cleanup.
 
 ### Kubernetes integration
 
-Since s6-svscan runs as root (PID 1), the Containerfile does not set a `USER`
-directive. Non-root execution for interactive sessions is enforced at the
-Kubernetes pod level.
+The Containerfile sets `USER debian`, so the container runs as non-root by
+default. s6-svscan runs as the debian user (UID 1000).
 
 Recommended pod `securityContext`:
 
@@ -215,15 +202,9 @@ spec:
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
+        runAsNonRoot: true
         allowPrivilegeEscalation: false
 ```
-
-This ensures `kubectl exec` sessions run as the `debian` user (UID 1000)
-while allowing s6-svscan (PID 1) to run as root for service supervision.
-
-Note: `runAsNonRoot: true` is **not compatible** with this image because
-PID 1 runs as root. Use `runAsUser: 1000` instead to control the exec session
-identity.
 
 For volume mounts, ensure the volume permissions are compatible with UID 1000
 or use `fsGroup: 1000` in the pod security context.
@@ -264,23 +245,13 @@ Each script receives the check type (for example `liveness`, `readiness`, or
 
 ## Idle service
 
-The image includes an s6-supervised cron service at:
+The image includes a default s6 service at:
 
 - `/etc/services.d/idle/run`
 
-It runs as root:
-
-- `/usr/sbin/cron -f -L 8`
-
-Cron requires root privileges for system crontabs. It runs under s6
-supervision and will be automatically restarted if it crashes.
-
-An hourly job is prewired:
-
-- `/etc/cron.hourly/container-backup` -> `/usr/bin/container-backup`
-
-Downstream containers can add scheduled tasks via `/etc/cron.d/` drop-in
-files or by overriding `/usr/bin/container-backup`.
+It runs `sleep infinity` to keep s6-svscan alive without requiring any daemon
+or root privileges. Downstream containers add their own services under
+`/etc/services.d/`.
 
 ## Sudo privileges
 
@@ -356,7 +327,6 @@ podman exec debian container-test
 - Override `/usr/bin/container-backup` with app-specific backup logic.
 - Override `/usr/bin/container-version` to report your app version.
 - Add service directories under `/etc/services.d/<service>/run`.
-- Use `s6-setuidgid debian` in `run` scripts to drop to the non-root user.
 - Add custom health checks under `/etc/health.d`.
 - Extend sudo policy via additional files in `/etc/sudoers.d`.
 

@@ -62,11 +62,11 @@ RUN /bin/mkdir -p /mnt/volumes/configuration \
                   /mnt/volumes/backup \
                   /mnt/volumes/secrets
  
-# ╭――――――――――――――――――――――――╮
-# │ DAEMON - IDLE          │
-# ╰――――――――――――――――――――――――╯
-# The idle service keeps s6-svscan alive without requiring any daemon.
-# It replaces the former crond service.
+# ╭――――――――――――――――――――╮
+# │ IDLE SERVICE       │
+# ╰――――――――――――――――――――╯
+# Default s6 service that keeps the container alive. The entrypoint runs
+# s6-svscan which supervises this service. sleep infinity uses zero CPU.
 COPY etc/services.d/idle/run /etc/services.d/idle/run
 # This is the default container backup script. The intention is that the
 # downstream containers would overload and replace this script with their own
