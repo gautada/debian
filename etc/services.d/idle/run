@@ -1,0 +1,12 @@
+#!/bin/sh
+# ╭――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――╮
+# │ IDLE - S6 SERVICE SCRIPT                                                   │
+# ╰――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――╯
+# This script is an s6 service run script that keeps the container alive.
+# It is placed at /etc/services.d/idle/run and executed by s6-svscan.
+#
+# s6-svscan requires at least one supervised service to stay running.
+# `sleep infinity` uses zero CPU and is universally available via GNU
+# coreutils. It replaces the former crond service that required root.
+
+exec sleep infinity

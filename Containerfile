@@ -20,7 +20,6 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 #
 # ca-certificate - Needed to support all manor of SSL stuff
 # curl - HTTP(s) client
-# cron - Scheduler
 # procps - System information
 # s6 - Control container processes
 # sudo - Priviledged permissions
@@ -30,7 +29,7 @@ LABEL org.opencontainers.image.license="Debian Free Software Guidelines (DFSG)"
 RUN apt-get update \
  && apt-get full-upgrade --yes \
  && apt-get install --yes --no-install-recommends \
-            ca-certificates curl cron procps s6 sudo tzdata vim.tiny zsh \
+            ca-certificates curl procps s6 sudo tzdata vim.tiny zsh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -64,17 +63,16 @@ RUN /bin/mkdir -p /mnt/volumes/configuration \
                   /mnt/volumes/secrets
  
 # ╭――――――――――――――――――――――――╮
-# │ DAEMON - CROND(Backup) │
+# │ DAEMON - IDLE          │
 # ╰――――――――――――――――――――――――╯
-# This container implements and runs crond.  This is used for scheduled tasks
-# within the container.
-COPY etc/services.d/crond/run /etc/services.d/crond/run
+# The idle service keeps s6-svscan alive without requiring any daemon.
+# It replaces the former crond service.
+COPY etc/services.d/idle/run /etc/services.d/idle/run
 # This is the default container backup script. The intention is that the
 # downstream containers would overload and replace this script with their own
 # backup definition.
 COPY usr/bin/container-backup /usr/bin/container-backup
-RUN chmod +x /usr/bin/container-backup \
- && /bin/ln -fsv /usr/bin/container-backup /etc/cron.hourly/container-backup
+RUN chmod +x /usr/bin/container-backup
 
 # ╭――――――――――――――――――――╮
 # │ PRIVILEGE          │
@@ -193,6 +191,7 @@ VOLUME /mnt/volumes/secrets
 # ╭――――――――――――――――――――╮
 # │ CONTAINER          │
 # ╰――――――――――――――――――――╯
+USER $USER
 ENTRYPOINT [ "/usr/bin/s6-svscan" , "/etc/services.d" ]
 EXPOSE 8080/tcp
 # WORKDIR /

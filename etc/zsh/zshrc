@@ -35,7 +35,7 @@
 # DEFAULT EDITOR
 # ------------------------------------------------------------------------------
 # Sets the system-wide default text editor for commands like `git commit`,
-# `crontab -e`, `visudo`, etc. Users can override in their ~/.zshrc.
+# `visudo`, etc. Users can override in their ~/.zshrc.
 #
 # Common alternatives:
 #   vim     - Vi Improved (current default, requires vim-tiny or vim package)

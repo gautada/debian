@@ -1,7 +1,7 @@
 # Debian Base Container
 
 Base Debian image for downstream application containers with s6 supervision,
-cron, health checks, and common operational helpers.
+health checks, and common operational helpers.
 
 ## Base image and build args
 
@@ -24,7 +24,7 @@ podman build -t debian \
 
 ## What this image configures
 
-- Installs: `ca-certificates`, `curl`, `cron`, `procps`, `s6`, `sudo`,
+- Installs: `ca-certificates`, `curl`, `procps`, `s6`, `sudo`,
   `tzdata`, `vim.tiny`, `zsh`
 - Sets timezone to `America/New_York`
 - Sets locale:
@@ -38,6 +38,7 @@ podman build -t debian \
 - Adds a `privileged` group (gid `99`) and includes the main container user
 - Uses `/bin/zsh` as the default shell for the container user
 - Entrypoint: `/usr/bin/s6-svscan /etc/services.d`
+- Runs as `USER debian` (non-root)
 - Exposes `8080/tcp`
 
 ## Runtime helpers
@@ -74,19 +75,14 @@ To add downstream checks, copy executable scripts into `/etc/health.d/`.
 Each script receives the check type (for example `liveness`, `readiness`, or
 `startup`) as argument 1.
 
-## Cron service
+## Idle service
 
 The image includes an s6 service at:
 
-- `/etc/services.d/crond/run`
+- `/etc/services.d/idle/run`
 
-It runs:
-
-- `/usr/sbin/cron -f -L 8`
-
-An hourly job is prewired:
-
-- `/etc/cron.hourly/container-backup` -> `/usr/bin/container-backup`
+It runs `sleep infinity` to keep s6-svscan alive without requiring any daemon
+or root privileges.
 
 ## Sudo privileges
 
@@ -176,7 +172,7 @@ podman exec debian container-test
 │   │   ├── packages-check
 │   │   └── signature-check
 │   ├── services.d
-│   │   └── crond
+│   │   └── idle
 │   │       └── run
 │   ├── skel
 │   │   ├── .vimrc
