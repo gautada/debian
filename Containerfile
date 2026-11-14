@@ -179,7 +179,8 @@ RUN /usr/sbin/groupadd --gid $GID $USER \
 # │ FILES              │
 # ╰――――――――――――――――――――╯
 WORKDIR /home/$USER
-RUN /bin/chown -R $USER:uucp /mnt/volumes/backup \
+RUN /bin/chown -R $USER:uucp /etc/services.d \
+ && /bin/chown -R $USER:uucp /mnt/volumes/backup \
  && /bin/chown -R $USER:uucp /mnt/volumes/configuration \
  && /bin/chown -R $USER:uucp /mnt/volumes/data \
  && /bin/chown -R $USER:uucp /mnt/volumes/secrets
